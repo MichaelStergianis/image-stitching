@@ -1,0 +1,4 @@
+* Image stitching
+** Author: Michael Stergianis
+
+   This project is intended to explore stitching images together using matching features between images.
