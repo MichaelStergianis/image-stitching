@@ -23,32 +23,35 @@ class Stitcher:
         return [kp, des]
 
     def good_features(self, img0, img1):
+        """Find `good' features from an image pair"""
         features = [self.extract_features(img) for img in (img0, img1)]
         bf = cv2.BFMatcher()
 
         matches = bf.knnMatch(features[0][1], features[1][1], k=2)
-        good = [[m] for m, n in matches if (m.distance < (self.thresh * n.distance))]
+        good = [[m] for m, n in matches if m.distance < (self.thresh * n.distance)]
         return (features[0][0], features[1][0]), good
 
     def homography(self, img0, img1):
+        """return the homography matrix for the image pair"""
         kps, good = self.good_features(img0, img1)
         if len(good) > self.min_matches:
-            ptsA = np.float32([kps[0][i[0].queryIdx].pt for i in good])
-            ptsB = np.float32([kps[1][i[0].trainIdx].pt for i in good])
+            pts_a = np.float32([kps[0][i[0].queryIdx].pt for i in good])
+            pts_b = np.float32([kps[1][i[0].trainIdx].pt for i in good])
 
-            H, _ = cv2.findHomography(ptsA, ptsB, cv2.RANSAC, self.reproj)
+            H, _ = cv2.findHomography(pts_a, pts_b, cv2.RANSAC, self.reproj)
             return H
         else:
             raise Exception("Not enough matches")
 
 
-    def new_dimensions(self, canvas, img, H):
+    def new_dimensions(self, canvas, img, h_mat):
+        """New dimensions for the canvas"""
         # get canvas dimensions
         cw, ch = canvas.shape[:2]
         canvas_dims = np.float32([[0,0], [0, cw], [ch, cw], [ch, 0]]).reshape([-1, 1, 2])
         iw, ih = img.shape[:2]
         img_dims = np.float32([[0,0], [0, iw], [ih, iw], [ih, 0]]).reshape([-1, 1, 2])
-        img_dims = cv2.perspectiveTransform(img_dims, H)
+        img_dims = cv2.perspectiveTransform(img_dims, h_mat)
         resultant_dims = np.concatenate((canvas_dims, img_dims), axis=0)
         [x_min, y_min] = np.int32(resultant_dims.min(axis=0).ravel() - 0.5)
         [x_max, y_max] = np.int32(resultant_dims.max(axis=0).ravel() + 0.5)
