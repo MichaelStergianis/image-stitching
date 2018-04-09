@@ -1,4 +1,36 @@
-* Image stitching
-** Author: Michael Stergianis
+#+TITLE: Image Stitching
+#+AUTHOR: Michael Stergianis
+* Introduction
+  This project is intended to explore stitching images together using
+  matching features between images.
 
-   This project is intended to explore stitching images together using matching features between images.
+  The intention is to have as little human interaction as possible. So
+  the goal is to have the computer find correspondences between images.
+
+  If time permits, I would like to implement it for \(n\) images.
+   
+* Technologies
+  The program defines a class that stitches images together. At the
+  command line the user gives a list of images and options for how to
+  output the results (live or to disc).
+  
+  =python stitch.py img0.jpg img1.jpg --display --save output.jpg=
+
+  When the images are provided the main function creates a =Stitcher=
+  class. From there the stitcher iterates through the images provided,
+  in order, and computes homography for the pair. It computes
+  homography by computing features in each image pair. These features
+  are computed by using the built in SIFT (Scale Invariant Feature
+  Transform). Once these features are found, the best features are
+  filtered into a list and this list is used. The user can specify the
+  correspondence threshold at the command line using the =thresh=
+  parameter. Once the best features are filtered we compute the
+  homography matrix using built in =opencv= functions. In order to
+  dynamically resize the output image, the algorithm computes the
+  conjunction of the canvas' dimensions and the warped additional
+  image's dimensions in order to determine the size of the new
+  canvas. Once the new canvas' size is computed, the original image is
+  warped to be fit onto the new canvas, and the old canvas is placed
+  on top of that. Because this approach is iterative, it works for
+  many images in general, but the best results are when two images are
+  provided.
